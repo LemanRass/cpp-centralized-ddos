@@ -9,6 +9,9 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
-cmake-build-release
 cmake-build-debug
-.idea/
+cmake-build-release
+.idea
+.vs
+out
+CMakePresets.json
