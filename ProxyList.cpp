@@ -22,14 +22,12 @@ string ReadLineFromFile(FILE *f) {
 
 void ReadProxiesFromFile(const string &path) {
 
-
     FILE *f = fopen(path.c_str(), "rb+");
 
     if (f == nullptr) {
         cout << "Proxies not found! Skipping..." << endl;
         return;
     }
-
 
     string line;
     do {
@@ -60,4 +58,8 @@ string ProxyList::PickNext() {
     }
 
     return proxies[currProxyNum];
+}
+
+int ProxyList::GetProxiesCount() {
+    return (int)proxies.size();
 }

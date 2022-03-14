@@ -35,8 +35,6 @@ struct ConfigData {
 class Config {
 
 private:
-    static string configUrl;
-
     static void Emit();
     static ConfigData DownloadNewConfig();
     static void CheckConfigLoop();
@@ -47,7 +45,8 @@ public:
 
     static void Init(string &url);
     static void Subscribe(const function<void()>&);
-    static void RunUpdater();
+    static void Start();
+    static void Stop();
 };
 
 

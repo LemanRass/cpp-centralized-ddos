@@ -14,6 +14,7 @@ class ProxyList {
 public:
     static void Init();
     static string PickNext();
+    static int GetProxiesCount();
 };
 
 

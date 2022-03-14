@@ -6,10 +6,10 @@
 
 string config_page;
 vector<function<void()>> subscribers;
-string Config::configUrl;
+string configUrl;
 ConfigData Config::localConfig;
-bool isInitialized;
-
+bool isStarted;
+thread configThread;
 
 size_t write_data(char* page, size_t size, size_t nmemb, void* userdata) {
 
@@ -41,6 +41,9 @@ ConfigData Config::DownloadNewConfig() {
     curl_easy_cleanup(curl);
     curl_global_cleanup();
 
+
+    //Logger::Log(config_page);
+
     auto parsed = nlohmann::json::parse(config_page);
 
     string target = parsed["target_url"];
@@ -56,10 +59,9 @@ void Config::CheckConfigLoop() {
 
     ConfigData remoteConfig;
 
-    while (isInitialized) {
+    while (isStarted) {
 
         try {
-
             remoteConfig = DownloadNewConfig();
 
             //If remote config has the newest version
@@ -79,19 +81,27 @@ void Config::CheckConfigLoop() {
 
         this_thread::sleep_for(5s);
     }
+
+    Logger::Log("[Config] Exit thread.");
 }
 
 void Config::Init(string &url) {
 
     configUrl = url;
     localConfig = DownloadNewConfig();
-
-    isInitialized = true;
+    Logger::Log(localConfig.toString());
 }
 
-void Config::RunUpdater() {
-    thread t1(CheckConfigLoop);
-    t1.join();
+void Config::Start() {
+
+    isStarted = true;
+
+    configThread = thread(CheckConfigLoop);
+    configThread.detach();
+}
+
+void Config::Stop() {
+    isStarted = false;
 }
 
 void Config::Subscribe(const function<void()> &f) {
@@ -99,7 +109,8 @@ void Config::Subscribe(const function<void()> &f) {
 }
 
 void Config::Emit() {
-    for (auto & subscriber : subscribers) {
+
+    for (auto &subscriber : subscribers) {
         subscriber();
     }
 }
