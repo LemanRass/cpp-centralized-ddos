@@ -11,8 +11,8 @@ bool isRunning;
 vector<thread> threads;
 
 string page;
-size_t Bot::write_data(char *buffer, size_t size, size_t nmemb, void *userp)
-{
+size_t Bot::write_data(char *buffer, size_t size, size_t nmemb, void *userp) {
+    
     size_t realSize = size * nmemb;
 
     /*for (int i = 0; i < realSize; i++) {
@@ -50,6 +50,7 @@ void Bot::performRequest(Request &request) {
 }
 
 void Bot::disposeRequest(Request request) {
+
     curl_easy_cleanup(request.curl);
 }
 
@@ -61,25 +62,6 @@ void Bot::threadLoop(int id) {
 
         //Send request
         performRequest(request);
-
-        //Check time
-        auto nowTimestamp = high_resolution_clock::now();
-        auto diff = duration_cast<milliseconds>(nowTimestamp - startTimestamp);
-
-
-        //When 1 second passed collect statistic
-        if (diff.count() > 1000) {
-
-            char msg[42];
-            sprintf(msg, "[Thread %d] Success: %d Failed: %d Total: %d", id, rps_success, rps_fail, rps_total);
-
-            Logger::Log(msg);
-
-            startTimestamp = high_resolution_clock::now();
-            rps_total = 0;
-            rps_success = 0;
-            rps_fail = 0;
-        }
 
         //Logger::Log(to_string(request.code));
 
@@ -95,16 +77,37 @@ void Bot::threadLoop(int id) {
     disposeRequest(request);
     curl_global_cleanup();
 
-    char output[22];
-    sprintf(output, "Thread %d is finished!", id);
-    Logger::Log(output);
+    Logger::Log("Thread " + to_string(id) + " is finished!");
 }
 
+void Bot::updateStats() {
+
+    if (!isRunning)
+        return;
+
+    Logger::Log("[Stats] Success: " + to_string(rps_success) +
+        " Fail: " + to_string(rps_fail) +
+        " Total: " + to_string(rps_total));
+
+    startTimestamp = high_resolution_clock::now();
+
+    rps_total = 0;
+    rps_success = 0;
+    rps_fail = 0;
+
+    this_thread::sleep_for(seconds(1));
+    updateStats();
+}
 
 void Bot::stop() {
+
     Logger::Log("Bot->Stop");
     isRunning = false;
     threads.clear();
+    rps_total = 0;
+    rps_fail = 0;
+    rps_success = 0;
+    this_thread::sleep_for(seconds(5));
 }
 
 
@@ -124,5 +127,8 @@ void Bot::start() {
     for (auto &thread : threads) {
         thread.detach();
     }
+
+    thread t1(updateStats);
+    t1.detach();
 }
 

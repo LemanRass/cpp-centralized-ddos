@@ -26,6 +26,7 @@ class Bot {
 private:
 
     static void threadLoop(int id);
+    static void updateStats();
     static size_t write_data(char *buffer, size_t size, size_t nmemb, void *userp);
     static Request createRequest();
     static void performRequest(Request &request);
