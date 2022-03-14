@@ -18,14 +18,12 @@ using namespace std;
 
 struct ConfigData {
     string target_url;
-    int threads_count;
     bool is_started;
     int timeout_ms;
     int version;
 
     string toString() {
         return "Target: " + target_url + "\n" +
-            "Threads: " + to_string(threads_count) + "\n" +
             "IsStarted: " + to_string(is_started) + "\n" +
             "Timeout: " + to_string(timeout_ms) + "\n" +
             "Version: " + to_string(version) + "\n";

@@ -111,12 +111,12 @@ void Bot::stop() {
 }
 
 
-void Bot::start() {
+void Bot::start(int threadCount) {
 
     Logger::Log("Bot->Start");
     isRunning = true;
 
-    for (int i = 0; i < Config::localConfig.threads_count; i++) {
+    for (int i = 0; i < threadCount; i++) {
         threads.emplace_back(thread(threadLoop, i));
     }
 

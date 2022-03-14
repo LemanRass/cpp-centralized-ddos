@@ -47,12 +47,11 @@ ConfigData Config::DownloadNewConfig() {
     auto parsed = nlohmann::json::parse(config_page);
 
     string target = parsed["target_url"];
-    int threads = parsed["threads_count"];
     bool started = parsed["is_started"];
     int timeout = parsed["timeout_ms"];
     int version = parsed["version"];
 
-    return { target, threads, started, timeout, version };
+    return { target, started, timeout, version };
 }
 
 void Config::CheckConfigLoop() {

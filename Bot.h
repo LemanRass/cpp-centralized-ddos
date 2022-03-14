@@ -34,7 +34,7 @@ private:
 
 public:
 
-    static void start();
+    static void start(int threadCount);
     static void stop();
     static void pause();
     static void resume();
